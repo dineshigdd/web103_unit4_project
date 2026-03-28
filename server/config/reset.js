@@ -18,7 +18,7 @@ const createTables = async () => {
             feature_id INTEGER REFERENCES features(id) ON DELETE CASCADE,
             name VARCHAR(255) NOT NULL,
             price_modifier INTEGER DEFAULT 0,
-            visual_asset VARCHAR(255)
+            image VARCHAR(255)
         );
 
         CREATE TABLE custom_items (
@@ -53,8 +53,8 @@ const seedDatabase = async () => {
 
             for (const option of feature.options) {
                 await pool.query(
-                    'INSERT INTO options (feature_id, name, price_modifier, visual_asset) VALUES ($1, $2, $3, $4)',
-                    [featureId, option.name, option.price_modifier, option.visual_asset]
+                    'INSERT INTO options (feature_id, name, price_modifier, image) VALUES ($1, $2, $3, $4)',
+                    [featureId, option.name, option.price_modifier, option.image]
                 );
             }
             console.log(`Feature "${feature.feature_name}" and its options inserted`);

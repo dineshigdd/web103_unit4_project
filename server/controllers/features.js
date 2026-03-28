@@ -11,7 +11,7 @@ export const getFeatures = async( req , res ) =>{
                         'id', o.id, 
                         'name', o.name, 
                         'price_modifier', o.price_modifier, 
-                        'visual_asset', o.visual_asset
+                        'image', o.image
                     )
                 ) AS options
             FROM features f

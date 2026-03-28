@@ -6,7 +6,8 @@ import '../css/CreateCar.css';
 const CreateCar = () => {
     const [features, setFeatures] = useState([]);
     const [selectedFeature, setSelectedFeature] = useState(null);
-    const [selections, setSelections] = useState({}); // To track chosen options
+    const [selections, setSelections] = useState({}); 
+    const [totalPrice, setTotalPrice ] = useState(70000);
 
     const colorMap = {
     "Midnight Blue": "#191970",
@@ -26,6 +27,7 @@ const CreateCar = () => {
                 // Automatically select the first feature (e.g., Exterior Color) on load
                 if (data && data.length > 0) {
                     setSelectedFeature(data[0]);
+                    console.log(data)
                 }
             } catch (error) {
                 console.error("Error fetching features:", error);
@@ -35,10 +37,21 @@ const CreateCar = () => {
     }, []);
 
     const handleOptionClick = (featureId, option) => {
-        setSelections(prev => ({
-            ...prev,
-            [featureId]: option
-        }));
+        setSelections(prevSelections => {
+        const newSelections = { ...prevSelections, [featureId]: option };
+
+        // 2. Calculate the total from all current selections
+        const extraCosts = Object.values(newSelections).reduce(
+            (sum, item) => sum + Number(item.price_modifier), 
+            0
+        );
+
+        // 3. Set the new total price (Base 70k + extras)
+        setTotalPrice(70000 + extraCosts);
+
+        return newSelections;
+    });
+
     };
 
     return (
@@ -68,44 +81,76 @@ const CreateCar = () => {
                 {selectedFeature && (
                     <div>
                         {selectedFeature.options.map(option => {
-                            // Logic: If the feature name contains "Color", show the actual color
-                            const isColor = selectedFeature.feature_name.toLowerCase().includes('color');
-                            const isSelected = selections[selectedFeature.id]?.id === option.id;
+                                const isColor = selectedFeature.feature_name.toLowerCase().includes('color');
+                                const isSelected = selections[selectedFeature.id]?.id === option.id;
 
-                            const buttonStyle = isColor ? {
-                                backgroundColor: colorMap[option.name] ||    option.name.toLowerCase(),
-                                color: ['white', 'silver', 'yellow'].includes(option.name.toLowerCase()) ? 'black' : 'white',
-                                border: isSelected ? '5px solid #0076ff' : '1px solid rgba(0,0,0,0.2)',
-                                transition: 'transform 0.2s',
-                                transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-                                minHeight: '80px'
-                            } : {};
+                                // dynamic values
+                                const bgColor = colorMap[option.name] || option.name.toLowerCase();
+                                const textColor = ['white', 'silver', 'yellow'].includes(option.name.toLowerCase()) ? 'black' : 'white';
+                                const hasImage = option.image && option.image !== "";
 
-                            return (
-                                <button 
+                               
+                                const dynamicVars = isColor ? {
+                                    '--option-bg': bgColor,
+                                    '--option-text': textColor
+                                } : {};
+                        return (
+                                <div 
                                     key={option.id} 
-                                    style={buttonStyle}
-                                    className={!isColor ? (isSelected ? "" : "outline secondary") : ""}
-                                    onClick={() => handleOptionClick(selectedFeature.id, option)}
+                                    className={`option-tile ${isSelected ? 'selected' : ''} ${hasImage ? 'has-image' : ''}`}
+                                    style={dynamicVars}
+                                    onClick={() => handleOptionClick(selectedFeature.id, option)}                               
                                 >
-                                    {option.name}
-                                    {option.price_modifier > 0 && ` (+$${option.price_modifier})`}
-                                </button>
+                                    {hasImage && (
+                                        <img src={option.image} alt={option.name} className="tile-image" />
+                                    )}
+
+                                    <div className="tile-overlay">
+                                        <span className="tile-name">{option.name}</span>
+                                        <span className="tile-price">+${option.price_modifier}</span>
+                                    </div>
+
+                                    {/* A small checkmark that only appears when selected */}
+                                    {isSelected && <div className="checkmark">✓</div>}
+                                </div>
                             );
                         })}
                     </div>
                 )}
+
+                {/* 3. Total Price & Submit Button */}
+                <section className="total-price-summary">
+                    
+                        {/* Card 1: Price and Action */}
+                        <article>
+                            <header>
+                                <h2 style={{ color: '#2ecc71', marginBottom: 0 }}>
+                                    Total: ${totalPrice.toLocaleString()}
+                                </h2>
+                            </header>
+                            <button className="contrast" onClick={() => alert("Car Saved!")}>
+                                Submit Configuration
+                            </button>
+                        </article>
+
+                        {/* Card 2: Current Selections List */}
+                        <article>
+                            <h3>Current Selection:</h3>
+                            <ul>
+                                {Object.values(selections).map(sel => (
+                                    <li key={sel.id}>
+                                        {sel.name} 
+                                        <small style={{ marginLeft: '10px', color: '#888' }}>
+                                            (+${sel.price_modifier})
+                                        </small>
+                                    </li>
+                                ))}
+                            </ul>
+                        </article>
+                    
+                </section>
             </section>
 
-            {/* Summary View (Optional: Shows what is currently picked) */}
-            <footer style={{ marginTop: '2rem', padding: '1rem', borderTop: '1px solid #ccc' }}>
-                <h3>Current Selection:</h3>
-                <ul>
-                    {Object.values(selections).map(sel => (
-                        <li key={sel.id}>{sel.name}</li>
-                    ))}
-                </ul>
-            </footer>
         </main>
     );
 };
