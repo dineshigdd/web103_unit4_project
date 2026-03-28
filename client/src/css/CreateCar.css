@@ -1,50 +1,36 @@
+/* Layout Containers */
 .container {
     display: flex;
     max-width: 100vw;
     align-items: flex-start;
+    padding: 2rem;
 }
 
 .features-nav {
-    /* display: flex; */
     justify-content: left; 
 }
 
-.options-section{
+.options-section {
     margin-left: 10vw;
+    display: flex;
+    flex-wrap: wrap; /* Allows tiles to wrap to the next line */
+    gap: 1.5rem; /* Adds space between your tiles */
 }
 
-.total-price-summary{
-    display: flex;  
-    margin-top: 2rem;    
-    border-top: 1px solid #ccc; 
-    text-align: 'center';
-    
-}
-
-.total-price-summary article{
-    margin-right: 10px;
-}
-
-
-
+/* Base Tile Styling */
 .option-tile {
     position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    min-height: 100px; /* Slightly taller for a premium feel */
-    min-width: 150px;
-    border: 2px solid rgba(0,0,0,0.1); /* Thicker border for tiles */
+    width: 150px;
+    height: 100px;
     cursor: pointer;
-    transition: all 0.2s ease-in-out;
+    overflow: hidden;
+    border-radius: 12px;
+    border: 2px solid transparent;
     background-color: var(--option-bg, #eee);
-    color: var(--option-text, white);
-    border-radius: 12px; /* Rounder corners look more modern */
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-/* Image stays the same logic */
+/* Image Layer */
 .tile-image {
     width: 100%;
     height: 100%;
@@ -55,8 +41,9 @@
     z-index: 1;
 }
 
-/* Label stays the same logic */
-.tile-label {
+/* The Overlay (Hidden until hover) */
+/* Note: Changed to .tile-overlay to match your recent JSX */
+.tile-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -66,20 +53,70 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    opacity: 0;
+    text-align: center;
+    
+    opacity: 0; /* Hidden by default */
     z-index: 2;
     transition: opacity 0.3s ease;
-    background: rgba(0, 0, 0, 0.6); 
+    
+    background: rgba(0, 0, 0, 0.7); /* Dark tint for text readability */
     color: white !important;
     pointer-events: none;
 }
 
-.option-tile:hover .tile-label {
-    opacity: 1;
+.tile-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
 }
 
+.tile-price {
+    font-size: 0.8rem;
+    color: #2ecc71; /* Green for pricing */
+}
+
+/* Hover State */
+.option-tile:hover {
+    transform: translateY(-5px); /* Lift effect */
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    border-color: rgba(0, 118, 255, 0.3);
+}
+
+.option-tile:hover .tile-overlay {
+    opacity: 1; /* Show text on hover */
+}
+
+/* Selected State */
 .option-tile.selected {
-    border: 4px solid #0076ff; /* Blue "Selected" Ring */
+    border: 4px solid #0076ff; /* High-contrast blue ring */
     transform: scale(1.03);
     box-shadow: 0 8px 20px rgba(0, 118, 255, 0.2);
+}
+
+/* Summary Section */
+.total-price-summary {
+    display: flex;  
+    margin-top: 2rem;    
+    border-top: 1px solid #ccc; 
+    padding-top: 1.5rem;
+}
+
+.total-price-summary article {
+    margin-right: 20px;
+}
+
+/* Optional: Checkmark style if you use it */
+.checkmark {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #0076ff;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
 }
