@@ -4,9 +4,14 @@
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
+
     width: 100vw;
-    height: 100vh;
-    overflow-y: scroll;
+    min-height: 100vh;    
+
+
+    display: flex;              /* ✅ key fix */
+    flex-direction: column;     /* stack navbar + content */
+    align-items: center;        /* center horizontally */
+
     overflow-x: hidden;
-    padding-bottom: 50px;
 }

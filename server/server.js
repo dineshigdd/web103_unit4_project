@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 
 // import the router from your routes file
 import featureRoutes from './routes/features.js'
+import carRoutes from './routes/cars.js'
 
 dotenv.config()
 
@@ -14,6 +15,7 @@ const app = express()
 
 app.use(express.json())
 app.use('/api/features', featureRoutes)
+app.use('/api/cars', carRoutes )
 
 
 

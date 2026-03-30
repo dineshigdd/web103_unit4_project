@@ -1,0 +1,54 @@
+.container{
+    display:flex;
+    flex-direction:column;
+}
+
+/* The main wrapper that holds Sidebar + Tiles */
+.showcase-content {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 30px;
+    
+    /* FIX: Force a specific height so the page body never moves */
+    height: 600px; 
+    max-height: 600px;
+    
+    /* Prevent internal elements from pushing the box bigger */
+    overflow: hidden; 
+    
+    /* Optional: Add a slight background or border to see the 'frame' */
+    background: rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    border-radius: 15px;
+}
+
+/* Ensure the sidebar takes up the full fixed height */
+.build-sidebar {
+    width: 350px;
+    height: 100%; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Keeps Update/Delete at the bottom */
+}
+
+/* The Grid on the right */
+.visual-tiles-container {
+    flex: 1; /* Takes up remaining width */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr); /* 2x2 grid */
+    gap: 15px;
+    height: 100%; /* Fills the 600px parent */
+}
+
+/* Force every tile to be the exact same size */
+.part-tile {
+    width: 100%;
+    height: 100%; 
+    position: relative;
+    background-color: #111;
+    border-radius: 8px;
+}
+
+

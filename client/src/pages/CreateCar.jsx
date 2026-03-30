@@ -1,33 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import '../App.css';
 import featuresAPI from '../services/featuresAPI';
+import carAPI from '../services/carAPI'; 
 import '../css/CreateCar.css';
+import { COLOR_MAP, BASE_CAR_PRICE } from '../utils/constants';
 
 const CreateCar = () => {
     const [features, setFeatures] = useState([]);
     const [selectedFeature, setSelectedFeature] = useState(null);
     const [selections, setSelections] = useState({}); 
-    const [totalPrice, setTotalPrice ] = useState(70000);
+    const [totalPrice, setTotalPrice] = useState(BASE_CAR_PRICE);
+    const [carName, setCarName] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
 
-    const colorMap = {
-    "Midnight Blue": "#191970",
-    "Matte Black": "#28282b",
-    "Phantom Gray": "#4b4b4b",
-    "Arctic White": "#f0f8ff",
-    "Racing Red": "#d00000",
-    "Golden Sun": "#ffd700",
-    "Obsidian": "#0b0d0f"
-};
+ 
     useEffect(() => {
         const fetchFeatures = async () => {
             try {
                 const data = await featuresAPI.getFeatures();
                 setFeatures(data);
                 
-                // Automatically select the first feature (e.g., Exterior Color) on load
+                // FIX: data is an array, you want to select the first OBJECT in that array
                 if (data && data.length > 0) {
-                    setSelectedFeature(data[0]);
-                    console.log(data)
+                    setSelectedFeature(data[0]); 
                 }
             } catch (error) {
                 console.error("Error fetching features:", error);
@@ -36,27 +31,58 @@ const CreateCar = () => {
         fetchFeatures();
     }, []);
 
-    const handleOptionClick = (featureId, option) => {
+    // Ensure this function receives the full 'feature' object from your .map()
+    const handleOptionClick = (feature, option) => {
         setSelections(prevSelections => {
-        const newSelections = { ...prevSelections, [featureId]: option };
+            const newSelections = { 
+                ...prevSelections, 
+                // We use feature.id as the key so each category only has one choice
+                [feature.id]: { 
+                    ...option, 
+                    // This is the CRITICAL line for your receipt labels
+                    categoryLabel: feature.feature_name 
+                } 
+            };
 
-        // 2. Calculate the total from all current selections
-        const extraCosts = Object.values(newSelections).reduce(
-            (sum, item) => sum + Number(item.price_modifier), 
-            0
-        );
+            // Recalculate total price immediately
+            const extraCosts = Object.values(newSelections).reduce(
+                (sum, item) => sum + Number(item.price_modifier || 0), 
+                0
+            );
 
-        // 3. Set the new total price (Base 70k + extras)
-        setTotalPrice(70000 + extraCosts);
+            setTotalPrice(70000 + extraCosts);
+            return newSelections;
+        });
+    };
 
-        return newSelections;
-    });
+    const handleSaveCar = async () => {
+        if (!carName.trim()) {
+            alert("Please give your configuration a name first!");
+            return;
+        }
 
+        setIsSaving(true);
+        const carData = {
+            item_name: carName,
+            base_price: 70000,
+            selections: selections,
+            total_price: totalPrice
+        };
+
+        try {
+            const result = await carAPI.saveCar(carData);
+            alert(`Success! "${result.item_name}" has been saved to your garage.`);
+            setCarName(""); 
+        } catch (error) {
+            console.error("Error saving car:", error);
+            alert("Failed to save configuration.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
         <main className="container">
-            {/* Horizontal Navigation for Main Features */}
             <nav className="features-nav">
                 <ul>
                     <li><strong>Customize:</strong></li>
@@ -65,7 +91,6 @@ const CreateCar = () => {
                     {features.map((feature) => (
                         <li key={feature.id}>
                             <button 
-                                // Highlights the active category
                                 className={selectedFeature?.id === feature.id ? "" : "outline"}
                                 onClick={() => setSelectedFeature(feature)}
                             >
@@ -76,30 +101,29 @@ const CreateCar = () => {
                 </ul>
             </nav>
 
-            {/* Options Section: Displays specific choices for the selected feature */}
             <section className="options-section">
                 {selectedFeature && (
-                    <div>
+                    <div className="options-grid">
                         {selectedFeature.options.map(option => {
-                                const isColor = selectedFeature.feature_name.toLowerCase().includes('color');
-                                const isSelected = selections[selectedFeature.id]?.id === option.id;
+                            const isColor = selectedFeature.feature_name.toLowerCase().includes('color');
+                            const isSelected = selections[selectedFeature.id]?.id === option.id;
+                            
+                            const bgColor = COLOR_MAP[option.name] || option.name.toLowerCase();
+                            const textColor = ['white', 'silver', 'yellow'].includes(option.name.toLowerCase()) ? 'black' : 'white';
+                            const hasImage = option.image && option.image !== "";
 
-                                // dynamic values
-                                const bgColor = colorMap[option.name] || option.name.toLowerCase();
-                                const textColor = ['white', 'silver', 'yellow'].includes(option.name.toLowerCase()) ? 'black' : 'white';
-                                const hasImage = option.image && option.image !== "";
+                            const dynamicVars = isColor ? {
+                                '--option-bg': bgColor,
+                                '--option-text': textColor
+                            } : {};
 
-                               
-                                const dynamicVars = isColor ? {
-                                    '--option-bg': bgColor,
-                                    '--option-text': textColor
-                                } : {};
-                        return (
+                            return (
                                 <div 
                                     key={option.id} 
-                                    className={`option-tile ${isSelected ? 'selected' : ''} ${hasImage ? 'has-image' : ''}`}
+                                    className={`option-tile ${isSelected ? 'selected' : ''}`}
                                     style={dynamicVars}
-                                    onClick={() => handleOptionClick(selectedFeature.id, option)}                               
+                                    // FIX: Pass the whole selectedFeature object here
+                                    onClick={() => handleOptionClick(selectedFeature, option)}                               
                                 >
                                     {hasImage && (
                                         <img src={option.image} alt={option.name} className="tile-image" />
@@ -110,7 +134,6 @@ const CreateCar = () => {
                                         <span className="tile-price">+${option.price_modifier}</span>
                                     </div>
 
-                                    {/* A small checkmark that only appears when selected */}
                                     {isSelected && <div className="checkmark">✓</div>}
                                 </div>
                             );
@@ -118,39 +141,55 @@ const CreateCar = () => {
                     </div>
                 )}
 
-                {/* 3. Total Price & Submit Button */}
                 <section className="total-price-summary">
-                    
-                        {/* Card 1: Price and Action */}
-                        <article>
-                            <header>
-                                <h2 style={{ color: '#2ecc71', marginBottom: 0 }}>
-                                    Total: ${totalPrice.toLocaleString()}
-                                </h2>
-                            </header>
-                            <button className="contrast" onClick={() => alert("Car Saved!")}>
-                                Submit Configuration
-                            </button>
-                        </article>
+                    <article className="save-config-card">
+                        <header>
+                            <h2 style={{ color: '#2ecc71', margin: 0 }}>
+                                Total: ${totalPrice.toLocaleString()}
+                            </h2>
+                        </header>
+                        
+                        <label htmlFor="car-name">
+                            Configuration Name
+                            <input 
+                                type="text" 
+                                id="car-name" 
+                                placeholder="e.g. Red Stealth Sport" 
+                                value={carName}
+                                onChange={(e) => setCarName(e.target.value)}
+                            />
+                        </label>
 
-                        {/* Card 2: Current Selections List */}
-                        <article>
-                            <h3>Current Selection:</h3>
-                            <ul>
-                                {Object.values(selections).map(sel => (
-                                    <li key={sel.id}>
-                                        {sel.name} 
-                                        <small style={{ marginLeft: '10px', color: '#888' }}>
-                                            (+${sel.price_modifier})
-                                        </small>
+                        <footer>
+                            <button 
+                                className="contrast" 
+                                onClick={handleSaveCar}
+                                disabled={isSaving || !carName.trim()}
+                            >
+                                {isSaving ? "Saving..." : "Submit Configuration"}
+                            </button>
+                        </footer>
+                    </article>
+
+                    <article className="receipt-card">
+                        <h3>Current Build</h3>
+                        <ul>
+                            {Object.values(selections).length > 0 ? (
+                                Object.values(selections).map((sel, index) => (
+                                    // FIX: Use a unique key combination or sel.id
+                                    <li key={sel.id || index} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        {/* Now sel.categoryLabel exists because of the handleOptionClick fix */}
+                                        <span><strong>{sel.categoryLabel}:</strong> {sel.name}</span>
+                                        <span style={{ color: '#888' }}>+${sel.price_modifier}</span>
                                     </li>
-                                ))}
-                            </ul>
-                        </article>
-                    
+                                ))
+                            ) : (
+                                <li style={{ color: '#888', fontStyle: 'italic' }}>No options selected</li>
+                            )}
+                        </ul>
+                    </article>
                 </section>
             </section>
-
         </main>
     );
 };

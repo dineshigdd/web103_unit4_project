@@ -1,0 +1,138 @@
+/* This ensures the details page takes over the screen and centers everything */
+.showcase-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 100px); /* Adjusts for padding in your App.css */
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* The Glassmorphism container that holds your content */
+.showcase-content {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    max-width: 1200px;
+    background: rgba(0, 0, 0, 0.7); /* Dark semi-transparent background */
+    backdrop-filter: blur(15px); /* Blurs the App.css background image */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 40px;
+    gap: 40px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Sidebar for Name, Price, and Buttons */
+.build-sidebar {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-width: 300px;
+}
+
+.build-header h1 {
+    font-size: 4rem;
+    margin: 0;
+    line-height: 1;
+    font-weight: 800;
+    text-transform: lowercase; /* Matches 'helki' / 'dinesh' screenshots */
+    color: #fff;
+}
+
+.price-tag {
+    margin-top: 15px;
+    font-size: 2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.build-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 50px;
+}
+
+.red-btn {
+    background-color: #7f1d1d; /* Deep red matching your screenshot */
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 4px;
+    flex: 1;
+    text-transform: uppercase;
+    transition: background 0.2s;
+}
+
+.red-btn:hover {
+    background-color: #b91c1c;
+}
+
+/* The Grid for Exterior, Wheels, etc. */
+.visual-tiles-container {
+    flex: 2;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 200px);
+    gap: 15px;
+}
+
+.part-tile {
+    position: relative;
+    background: #111;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #333;
+}
+
+.part-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Hover reveal logic */
+.part-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    text-align: center;
+    padding: 15px;
+}
+
+.part-tile:hover .part-overlay {
+    opacity: 1;
+}
+
+.overlay-inner .cat {
+    color: #3b82f6; /* Soft blue for category */
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin: 0;
+}
+
+.overlay-inner .name {
+    font-size: 1.25rem;
+    margin: 8px 0;
+    color: #fff;
+}
+
+.overlay-inner .price {
+    color: #22c55e; /* Green for price modifier */
+    font-weight: bold;
+}

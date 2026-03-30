@@ -1,4 +1,4 @@
-const API_URL = 'api/features';
+const API_URL = '/api/features';
 
 const getFeatures = async () => {
     try {

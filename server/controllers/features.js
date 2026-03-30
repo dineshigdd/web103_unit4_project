@@ -1,6 +1,6 @@
 import { pool } from '../config/database.js'
 
-export const getFeatures = async( req , res ) =>{
+export const getCarFeatures = async( req , res ) =>{
     try{
         const results = await pool.query(`
             SELECT 

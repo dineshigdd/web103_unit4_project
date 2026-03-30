@@ -15,7 +15,23 @@ const features = [
       { "id": 201, "name": "18-inch Standard", "price_modifier": 0, "image": "/assets/wheels-std.png" },
       { "id": 202, "name": "20-inch Sport", "price_modifier": 1200, "image": "/assets/wheels-sport.png" }
     ]
+  },
+  {
+    "id": 3,
+    "feature_name": "Roof",
+    "options": [
+      { "id": 301, "name": "Panoramic Glass", "price_modifier": 1500, "image": "/assets/roof-glass.png" },
+      { "id": 302, "name": "Carbon Fiber", "price_modifier": 2500, "image": "/assets/roof-carbon.png" }
+    ]
+  },
+  {
+    "id": 4,
+    "feature_name": "Interior",
+    "options": [
+      { "id": 401, "name": "Alcantara Black", "price_modifier": 0, "image": "/assets/interior-black.png" },
+      { "id": 402, "name": "Cognac Leather", "price_modifier": 1800, "image": "/assets/interior-cognac.png" }
+    ]
   }
-]
+];
 
 export default features
