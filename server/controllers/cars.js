@@ -2,17 +2,21 @@ import { pool } from '../config/database.js'
 
 // 1. CREATE: Save a new car configuration
 export const createCar = async (req, res) => {
-    const { item_name, selections, base_price, total_price } = req.body;
+    // 1. Destructure the new is_convertible field from req.body
+    const { item_name, selections, base_price, total_price, is_convertible } = req.body;
 
     try {
+        // 2. Update the query to include the is_convertible column
         const query = `
-            INSERT INTO custom_items (item_name, base_price, selected_options, total_price) 
-            VALUES ($1, $2, $3, $4) 
+            INSERT INTO custom_items (item_name, base_price, is_convertible, selected_options, total_price) 
+            VALUES ($1, $2, $3, $4, $5) 
             RETURNING *`;
         
+        // 3. Add the value to the array (matches $3 in the query above)
         const values = [
             item_name, 
             base_price, 
+            is_convertible || false, // Fallback to false if not provided
             JSON.stringify(selections), 
             total_price
         ];
@@ -55,16 +59,27 @@ export const getCarById = async (req, res) => {
 // 4. UPDATE: Modify an existing car
 export const updateCar = async (req, res) => {
     const { id } = req.params;
-    const { item_name, selections, total_price } = req.body;
+    // We include is_convertible in the destructuring 
+    const { item_name, selections, total_price, is_convertible } = req.body;
 
     try {
         const query = `
             UPDATE custom_items 
-            SET item_name = $1, selected_options = $2, total_price = $3 
-            WHERE id = $4 
+            SET item_name = $1, 
+                selected_options = $2, 
+                total_price = $3,
+                is_convertible = $4  -- Keeps the body type in sync
+            WHERE id = $5 
             RETURNING *`;
         
-        const values = [item_name, JSON.stringify(selections), total_price, id];
+        const values = [
+            item_name, 
+            JSON.stringify(selections), 
+            total_price, 
+            is_convertible, // Passed from frontend (which should have the checkbox disabled/locked)
+            id
+        ];
+        
         const result = await pool.query(query, values);
 
         if (result.rows.length === 0) {

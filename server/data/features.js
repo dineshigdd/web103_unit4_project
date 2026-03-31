@@ -20,8 +20,10 @@ const features = [
     "id": 3,
     "feature_name": "Roof",
     "options": [
-      { "id": 301, "name": "Panoramic Glass", "price_modifier": 1500, "image": "/assets/roof-glass.png" },
-      { "id": 302, "name": "Carbon Fiber", "price_modifier": 2500, "image": "/assets/roof-carbon.png" }
+      { "id": 301, "name": "Panoramic Glass", "price_modifier": 1500,"is_convertible": false, "image": "/assets/roof-glass.png" },
+      { "id": 302, "name": "Carbon Fiber", "price_modifier": 2500,"is_convertible": false, "image": "/assets/roof-carbon.png" },
+      { "id": 303, "name": "Retractable Soft Top", "price_modifier": 2000,"is_convertible": true, "image": "/assets/roof-soft-top.png"  },
+      { "id": 304, "name": "Power Hardtop", "price_modifier": 4500, "is_convertible": true,"image": "/assets/roof-hard-top.png" },
     ]
   },
   {

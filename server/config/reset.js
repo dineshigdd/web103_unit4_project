@@ -18,14 +18,16 @@ const createTables = async () => {
             feature_id INTEGER REFERENCES features(id) ON DELETE CASCADE,
             name VARCHAR(255) NOT NULL,
             price_modifier INTEGER DEFAULT 0,
-            image VARCHAR(255)
+            is_convertible BOOLEAN DEFAULT FALSE,
+            image VARCHAR(255)                       
         );
 
         CREATE TABLE custom_items (
             id SERIAL PRIMARY KEY,
             item_name VARCHAR(255) NOT NULL,
             base_price INTEGER NOT NULL,
-            selected_options JSONB NOT NULL, -- Stores the selected IDs for flexibility
+            is_convertible BOOLEAN DEFAULT FALSE, 
+            selected_options JSONB NOT NULL,
             total_price INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -53,8 +55,8 @@ const seedDatabase = async () => {
 
             for (const option of feature.options) {
                 await pool.query(
-                    'INSERT INTO options (feature_id, name, price_modifier, image) VALUES ($1, $2, $3, $4)',
-                    [featureId, option.name, option.price_modifier, option.image]
+                    'INSERT INTO options (feature_id, name, price_modifier,is_convertible, image) VALUES ($1, $2, $3, $4,$5)',
+                    [featureId, option.name, option.price_modifier,option.is_convertible|| false, option.image]
                 );
             }
             console.log(`Feature "${feature.feature_name}" and its options inserted`);
@@ -63,10 +65,11 @@ const seedDatabase = async () => {
         // 2. Insert Sample Custom Items
         for (const item of customItemsData) {
             await pool.query(
-                'INSERT INTO custom_items (item_name, base_price, selected_options, total_price) VALUES ($1, $2, $3, $4)',
+                'INSERT INTO custom_items (item_name, base_price, is_convertible, selected_options, total_price) VALUES ($1, $2, $3, $4, $5)',
                 [
                     item.item_name,
                     item.base_price,
+                    item.is_convertible || false, 
                     JSON.stringify(item.selected_options),
                     item.total_price
                 ]

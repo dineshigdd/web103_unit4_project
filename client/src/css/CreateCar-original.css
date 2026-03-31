@@ -105,3 +105,18 @@ Layout Containers
     margin-right: 20px;
 }
 
+/* Optional: Checkmark style if you use it */
+.checkmark {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #0076ff;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+} 

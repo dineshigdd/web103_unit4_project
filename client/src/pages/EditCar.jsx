@@ -3,7 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import carAPI from '../services/carAPI';
 import featuresAPI from '../services/featuresAPI';
 import { COLOR_MAP, BASE_CAR_PRICE } from '../utils/constants';
-import '../css/EditCar.css'
+import ConstraintModal from '../components/ConstraintModal';
+import { validateRoofCompatibility } from '../utils/validation'; 
+import Notification from '../components/Notification';
+
+import '../css/EditCar.css';
 import '../App.css';
 
 const EditCar = ({ title }) => {
@@ -13,71 +17,139 @@ const EditCar = ({ title }) => {
     // State management
     const [features, setFeatures] = useState([]);
     const [selectedFeature, setSelectedFeature] = useState(null);
-    const [itemName, setItemName] = useState(''); // Matches your input value
+    const [itemName, setItemName] = useState(''); 
     const [selections, setSelections] = useState({}); 
     const [basePrice] = useState(BASE_CAR_PRICE); 
     const [loading, setLoading] = useState(true);
+    const [isConvertible, setIsConvertible] = useState(false);
+    const [error, setError] = useState("");
+    const [modalConfig, setModalConfig] = useState({ 
+            isOpen: false, 
+            title: "", 
+            message: "", 
+            type: "" 
+    });
+
+    const closeModal = () => setModalConfig({ ...modalConfig, isOpen: false });
 
     useEffect(() => {
-        if (title) document.title = title;
+    if (title) document.title = title;
 
-        const loadInitialData = async () => {
-            try {
-                const [carData, allFeatures] = await Promise.all([
-                    carAPI.getCarById(id),
-                    featuresAPI.getFeatures()
-                ]);
+    const loadInitialData = async () => {
+        try {
+            const [carData, allFeatures] = await Promise.all([
+                carAPI.getCarById(id),
+                featuresAPI.getFeatures()
+            ]);
 
+            if (carData) {
                 if (carData) {
-                    let options = carData.selections || carData.selected_options;
+                    let options = carData.selected_options || carData.selections;
                     if (typeof options === 'string') options = JSON.parse(options);
                     
-                    setItemName(carData.item_name);
+                    setItemName(carData.item_name || "");
                     setSelections(options || {});
-                }
+                    
+                    // MATCHING YOUR DB: Using "is_convertible_only" for the car build status
+                    const carIsConvertible = !!carData.is_convertible;                 
+                    setIsConvertible(carIsConvertible);
 
-                if (allFeatures) {
-                    setFeatures(allFeatures);
-                    if (allFeatures.length > 0) setSelectedFeature(allFeatures[0]);
+                    // Ensure error is empty so no dialog box shows on load
+                    setError(""); 
                 }
-            } catch (err) {
-                console.error("Error loading EditCar data:", err);
-            } finally {
-                setLoading(false);
             }
-        };
-        loadInitialData();
+
+            if (allFeatures) {
+                setFeatures(allFeatures);
+                if (allFeatures.length > 0) setSelectedFeature(allFeatures[0]);
+            }
+        } catch (err) {
+            console.error("Error loading EditCar data:", err);
+        } finally {
+            // Only stop the loading spinner once everything is set
+            setLoading(false); 
+        }
+    };
+    loadInitialData();
     }, [id, title]);
 
-    // Recalculate total price whenever selections change
     const totalPrice = useMemo(() => {
         const optionsTotal = Object.values(selections).reduce((acc, opt) => acc + Number(opt.price_modifier || 0), 0);
         return basePrice + optionsTotal;
     }, [selections, basePrice]);
 
     const handleSelectOption = (feature, option) => {
+        // Update selection first so the UI reflects the change
+        const updatedSelection = { 
+            ...option, 
+            categoryLabel: feature.feature_name 
+        };
+
         setSelections(prev => ({
             ...prev,
-            [feature.id]: { 
-                ...option, 
-                categoryLabel: feature.feature_name 
-            }
+            [feature.id]: updatedSelection
         }));
+
+        // Validation logic for Roof (ID 3)
+        if (feature.id === 3) {
+            const msg = validateRoofCompatibility(isConvertible, option);
+            setError(msg); // Trigger modal if incompatible
+        } else if (error && feature.id !== 3) {
+            // Keep existing error if they change other parts while roof is broken
+        } else {
+            setError("");
+        }
     };
 
     const handleUpdate = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
+        
+
+        if (error) {
+            setModalConfig({
+                isOpen: true,
+                title: "Compatibility Issue",
+                message: error, 
+            });
+        return;
+        }
+
+        //check all the selectio are selected
+        if (selectedCount < totalRequired) {
+            setModalConfig({
+                isOpen: true,
+                title: "Incomplete Build",
+                message: `This car is missing ${totalRequired - selectedCount} parts. Please select an option for every category.`,
+                type: "error"
+            });
+
+            return;
+        }
         try {
             const updatedCar = {
                 item_name: itemName,
+                is_convertible: isConvertible, 
                 selections: selections,
                 total_price: totalPrice
             };
+
             await carAPI.updateCar(id, updatedCar);
-            alert("Configuration updated!");
+
+            setModalConfig({
+                isOpen: true,
+                title: "Changes Saved!",
+                message: "Your car has been successfully updated.",
+                type: "success"
+            });
+
             navigate('/customcars');  
         } catch (err) {
-            alert("Update failed.");
+                setModalConfig({
+                isOpen: true,
+                title: "Update Failed",
+                message: "We couldn't save your changes. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -92,19 +164,16 @@ const EditCar = ({ title }) => {
         }
     };
 
-    // Helper function to find color regardless of CAPS
-        const getOptionColor = (name) => {
-            if (!name) return '#333';
-            // Find the key in COLOR_MAP that matches the name (ignoring case)
-            const key = Object.keys(COLOR_MAP).find(k => k.toLowerCase() === name.toLowerCase());
-            return COLOR_MAP[key] || '#333'; 
-        };
+    const getOptionColor = (name) => {
+        if (!name) return '#333';
+        const key = Object.keys(COLOR_MAP).find(k => k.toLowerCase() === name.toLowerCase());
+        return COLOR_MAP[key] || '#333'; 
+    };
 
     if (loading) return <div className="loading-state">Loading...</div>;
 
     return (
         <div className="container">
-            {/* Features Navigation */}
             <nav className="features-nav">
                 <ul>
                     <li><strong>Customize:</strong></li>
@@ -125,7 +194,6 @@ const EditCar = ({ title }) => {
 
             <div className="showcase-wrapper">
                 <div className="showcase-content">
-                    {/* LEFT SIDE: Name, Price, and Options */}
                     <aside className="build-sidebar">
                         <div className="build-header">
                             <input 
@@ -141,42 +209,74 @@ const EditCar = ({ title }) => {
                             </div>
                         </div>
 
+                        <div className="car-specs-header">
+                            <h3>Editing Your Build</h3>
+                            <p>
+                                <strong>Body Style:</strong> {isConvertible ? "Convertible" : "Coupe"} 
+                                <span className="lock-icon"> 🔒 (Locked)</span>
+                            </p>
+                        </div>
+
                         <div className="selectors-container">
                             {selectedFeature && (
                                 <div className="options-selector">
-                                    <label>Choose {selectedFeature.feature_name}</label>
-                                    <div className="options-grid">
+                                    <label htmlFor="feature-select">Available {selectedFeature.feature_name}s:</label>
+                                    <select 
+                                        id="feature-select"
+                                        className="feature-dropdown"
+                                        value={selections[selectedFeature.id]?.id || ""} 
+                                        onChange={(e) => {
+                                            const chosenOption = selectedFeature.options.find(
+                                                (opt) => String(opt.id) === e.target.value
+                                            );
+                                            if (chosenOption) handleSelectOption(selectedFeature, chosenOption);
+                                        }}
+                                    >
+                                        <option value="" disabled>-- Choose an option --</option>
                                         {selectedFeature.options?.map((opt) => (
-                                            <button 
-                                                key={opt.id}
-                                                className={selections[selectedFeature.id]?.id === opt.id ? "active-opt" : "outline"}
-                                                onClick={() => handleSelectOption(selectedFeature, opt)}
-                                            >
+                                            <option key={opt.id} value={opt.id}>
                                                 {opt.name} (${opt.price_modifier >= 0 ? '+' : ''}{opt.price_modifier})
-                                            </button>
+                                            </option>
                                         ))}
-                                    </div>
+                                    </select>
                                 </div>
                             )}
                         </div>
 
                         <div className="build-actions">
-                            <button className="red-btn" onClick={handleUpdate}>UPDATE</button>
-                            <button className="red-btn" onClick={handleDelete}>DELETE</button>
-                        </div>
+                        <button 
+                            className="red-btn" 
+                            disabled={error !== ""} 
+                            onClick={handleUpdate}
+                        >
+                            UPDATE
+                        </button>
+                        
+                        <button 
+                            className="red-btn outline" 
+                            onClick={handleDelete}
+                        >
+                            DELETE
+                        </button>
+                    </div>                       
                     </aside>
+                    {/* validations and notificaitons */}
+                     <ConstraintModal error={error} setError={setError} />
+                     <Notification
+                        isOpen={modalConfig.isOpen}
+                        onClose={closeModal}
+                        title={modalConfig.title}
+                        message={modalConfig.message}
+                        type={modalConfig.type}
+                    />
 
-                    {/* RIGHT SIDE: Dynamic Visual Image Tiles */}
                     <div className="visual-tiles-container">
                         {features.map((feature) => {
-                            // Look up if this specific feature (e.g., Exterior) is in our selections
-                            // Use feature.id or feature.feature_name depending on how you store keys
-                            const selectedOption = selections[feature.id] || selections[feature.feature_name];
-
+                            const selectedOption = selections[feature.id];
                             return (
                                 <div key={feature.id} className="part-tile">
                                     {selectedOption ? (
-                                        <div className="tile-content-wrapper" style={{ width: '100%', height: '100%' }}>
+                                        <div className="tile-content-wrapper" style={{ width: '100%', height: '100%', position: 'relative' }}>
                                             {selectedOption.image ? (
                                                 <img 
                                                     src={selectedOption.image} 
@@ -184,17 +284,11 @@ const EditCar = ({ title }) => {
                                                     style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                                 />
                                             ) : (
-                                                /* THE COLOR BLOCK */
                                                 <div 
                                                     className="color-block"
                                                     style={{ 
                                                         backgroundColor: getOptionColor(selectedOption.name),
-                                                        width: '100%',
-                                                        height: '100%',
-                                                        display: 'block',
-                                                        position: 'absolute',
-                                                        top: 0,
-                                                        left: 0
+                                                        width: '100%', height: '100%'
                                                     }}
                                                 ></div>
                                             )}
@@ -208,7 +302,6 @@ const EditCar = ({ title }) => {
                                             </div>
                                         </div>
                                     ) : (
-                                        /* EMPTY SLOT: Keeps the UI from moving */
                                         <div className="placeholder-slot">
                                             <span>Select {feature.feature_name}</span>
                                         </div>

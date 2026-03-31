@@ -3,6 +3,9 @@ const API_URL = '/api/cars';
 const carAPI = {
     // 1. CREATE: Save a new car configuration
     saveCar: async (carData) => {
+        console.log("carData");
+        console.log(carData);
+        
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
