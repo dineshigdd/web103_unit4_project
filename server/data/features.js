@@ -3,7 +3,7 @@ const features = [
     "id": 1,
     "feature_name": "Exterior Color",
     "options": [
-      { "id": 101, "name": "Midnight Blue", "price_modifier": 0 },
+      { "id": 101, "name": "Midnight Blue", "price_modifier": 400 },
       { "id": 102, "name": "Matte Black", "price_modifier": 500 },
       { "id": 103, "name": "Racing Red", "price_modifier": 300 }
     ]
@@ -12,7 +12,7 @@ const features = [
     "id": 2,
     "feature_name": "Wheels",
     "options": [
-      { "id": 201, "name": "18-inch Standard", "price_modifier": 0, "image": "/assets/wheels-std.png" },
+      { "id": 201, "name": "18-inch Standard", "price_modifier": 800, "image": "/assets/wheels-std.png" },
       { "id": 202, "name": "20-inch Sport", "price_modifier": 1200, "image": "/assets/wheels-sport.png" }
     ]
   },
@@ -30,7 +30,7 @@ const features = [
     "id": 4,
     "feature_name": "Interior",
     "options": [
-      { "id": 401, "name": "Alcantara Black", "price_modifier": 0, "image": "/assets/interior-black.png" },
+      { "id": 401, "name": "Alcantara Black", "price_modifier": 1000, "image": "/assets/interior-black.png" },
       { "id": 402, "name": "Cognac Leather", "price_modifier": 1800, "image": "/assets/interior-cognac.png" }
     ]
   }

@@ -6,7 +6,7 @@ import { COLOR_MAP, BASE_CAR_PRICE } from '../utils/constants';
 import ConstraintModal from '../components/ConstraintModal';
 import { validateRoofCompatibility } from '../utils/validation';
 import Notification from '../components/Notification'
-import '../css/CreateCar.css'; // Reusing your EditCar styles for consistency
+import '../css/CreateCar.css'; 
 import '../App.css';
 
 const CreateCar = ({ title }) => {

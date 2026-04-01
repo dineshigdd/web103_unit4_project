@@ -3,13 +3,22 @@ import { useParams, useNavigate } from 'react-router-dom';
 import carAPI from '../services/carAPI';
 import '../css/CarDetails.css';
 import { COLOR_MAP, BASE_CAR_PRICE } from '../utils/constants';
+import Notification from '../components/Notification';
 
 const CarDetails = ({ title }) => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [car, setCar] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [modalConfig, setModalConfig] = useState({ 
+            isOpen: false, 
+            title: "", 
+            message: "", 
+            type: "" 
+    });
 
+    const closeModal = () => setModalConfig({ ...modalConfig, isOpen: false });
     useEffect(() => {
         if (title) document.title = title;
         const fetchCar = async () => {
@@ -30,10 +39,30 @@ const CarDetails = ({ title }) => {
     }, [id, title]);
 
     const handleDelete = async () => {
-        if (window.confirm("Delete this configuration?")) {
-            await carAPI.deleteCar(id);
-            navigate('/customcars');
-        }
+    // 1. Setup the modal for Confirmation
+        setModalConfig({
+            isOpen: true,
+            title: "Delete Build?",
+            message: "This will permanently remove 'Stealth Droptop' from your garage. Are you sure?",
+            type: "error", // Use error type to trigger your red text style
+            // We pass the actual delete logic as the onClose or a separate handler
+            onConfirm: async () => {
+                try {
+                    await carAPI.deleteCar(id);
+                    setModalConfig({ isOpen: false }); // Close modal
+                    navigate('/customcars');           // Redirect
+                } catch (err) {
+                    // If it fails, reuse the modal to show the error
+                    setModalConfig({
+                        isOpen: true,
+                        title: "Error",
+                        message: "Failed to delete the car. Please try again.",
+                        type: "error",
+                        onConfirm: () => setModalConfig({ isOpen: false })
+                    });
+                }
+            }
+        });
     };
 
     if (loading) return <div className="loading-state">Loading...</div>;
@@ -70,7 +99,14 @@ const CarDetails = ({ title }) => {
                         <button className="red-btn" onClick={handleDelete}>DELETE</button>
                     </div>
                 </aside>
-
+                <Notification 
+                        isOpen={modalConfig.isOpen}
+                        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                        onConfirm={modalConfig.onConfirm} 
+                        title={modalConfig.title}
+                        message={modalConfig.message}
+                        type={modalConfig.type}
+                    />
                 {/* Visual Tiles: This is where the images live */}
                 <div className="visual-tiles-container">
                     {options.map((opt, i) => (

@@ -31,6 +31,9 @@ const EditCar = ({ title }) => {
     });
 
     const closeModal = () => setModalConfig({ ...modalConfig, isOpen: false });
+    
+    const selectedCount = Object.keys(selections).length;
+    const totalRequired = 4; // Or however many categories yo
 
     useEffect(() => {
     if (title) document.title = title;
@@ -79,42 +82,70 @@ const EditCar = ({ title }) => {
     }, [selections, basePrice]);
 
     const handleSelectOption = (feature, option) => {
-        // Update selection first so the UI reflects the change
+     
+
+        const featureId = Number(feature.id);
         const updatedSelection = { 
             ...option, 
             categoryLabel: feature.feature_name 
         };
 
+        // 2. Update the selections
         setSelections(prev => ({
             ...prev,
-            [feature.id]: updatedSelection
+            [featureId]: updatedSelection
         }));
 
-        // Validation logic for Roof (ID 3)
-        if (feature.id === 3) {
+        // 3. Only RE-FIRE the error if the CURRENT selection is actually bad
+        if (featureId === 3) {
             const msg = validateRoofCompatibility(isConvertible, option);
-            setError(msg); // Trigger modal if incompatible
-        } else if (error && feature.id !== 3) {
-            // Keep existing error if they change other parts while roof is broken
-        } else {
-            setError("");
-        }
+            
+            if (msg) {
+                setError(msg); // Only set it if there is a real problem
+                
+            }
+        } 
+       
     };
 
     const handleUpdate = async (e) => {
         if (e) e.preventDefault();
         
+        // 1. Get the current roof from your selections state
+    // We check both string "3" and number 3 just in case
+        const currentRoof = selections[3] || selections["3"];
 
-        if (error) {
+        // 2. LIVE VALIDATION: Calculate it right now
+    // This does not rely on the 'error' state variable at all
+        const activeError = currentRoof 
+        ? validateRoofCompatibility(isConvertible, currentRoof) 
+        : ""
+
+        // 2. Validation: Check for Name
+        if (!itemName.trim()) {
+            setModalConfig({
+                isOpen: true,
+                title: "Missing Name",
+                message: "Please give your masterpiece a name before saving!",
+                type: "error"
+            });
+            return;
+        }
+
+        // 3. Validation: Check for Roof/Convertible Compatibility
+        // This uses the 'error' state which should be set by your toggle/dropdown logic
+        
+        if (activeError) {
             setModalConfig({
                 isOpen: true,
                 title: "Compatibility Issue",
-                message: error, 
+                message: activeError, 
+                type: "error"
             });
-        return;
+            return;
         }
 
-        //check all the selectio are selected
+        // 4. Validation: Check for completeness
         if (selectedCount < totalRequired) {
             setModalConfig({
                 isOpen: true,
@@ -122,9 +153,10 @@ const EditCar = ({ title }) => {
                 message: `This car is missing ${totalRequired - selectedCount} parts. Please select an option for every category.`,
                 type: "error"
             });
-
             return;
         }
+
+        // 5. Execution: Save to Database
         try {
             const updatedCar = {
                 item_name: itemName,
@@ -135,16 +167,20 @@ const EditCar = ({ title }) => {
 
             await carAPI.updateCar(id, updatedCar);
 
+            // 6. Success Notification with Integrated Navigation
             setModalConfig({
                 isOpen: true,
                 title: "Changes Saved!",
                 message: "Your car has been successfully updated.",
-                type: "success"
+                type: "success",
+                // The navigation happens ONLY when the user clicks the "Confirm" button
+                onConfirm: () => {
+                    setModalConfig({ isOpen: false });
+                    navigate('/customcars');
+                }
             });
-
-            navigate('/customcars');  
         } catch (err) {
-                setModalConfig({
+            setModalConfig({
                 isOpen: true,
                 title: "Update Failed",
                 message: "We couldn't save your changes. Please try again.",
@@ -154,14 +190,30 @@ const EditCar = ({ title }) => {
     };
 
     const handleDelete = async () => {
-        if (window.confirm("Are you sure you want to delete this build?")) {
-            try {
-                await carAPI.deleteCar(id);
-                navigate('/customcars');
-            } catch (err) {
-                alert("Delete failed.");
+    // 1. Setup the modal for Confirmation
+        setModalConfig({
+            isOpen: true,
+            title: "Delete Build?",
+            message: "This will permanently remove 'Stealth Droptop' from your garage. Are you sure?",
+            type: "error", // Use error type to trigger your red text style
+            // We pass the actual delete logic as the onClose or a separate handler
+            onConfirm: async () => {
+                try {
+                    await carAPI.deleteCar(id);
+                    setModalConfig({ isOpen: false }); // Close modal
+                    navigate('/customcars');           // Redirect
+                } catch (err) {
+                    // If it fails, reuse the modal to show the error
+                    setModalConfig({
+                        isOpen: true,
+                        title: "Error",
+                        message: "Failed to delete the car. Please try again.",
+                        type: "error",
+                        onConfirm: () => setModalConfig({ isOpen: false })
+                    });
+                }
             }
-        }
+        });
     };
 
     const getOptionColor = (name) => {
@@ -262,9 +314,11 @@ const EditCar = ({ title }) => {
                     </aside>
                     {/* validations and notificaitons */}
                      <ConstraintModal error={error} setError={setError} />
-                     <Notification
+                     
+                    <Notification 
                         isOpen={modalConfig.isOpen}
-                        onClose={closeModal}
+                        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+                        onConfirm={modalConfig.onConfirm} 
                         title={modalConfig.title}
                         message={modalConfig.message}
                         type={modalConfig.type}

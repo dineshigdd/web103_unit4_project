@@ -15,3 +15,12 @@
 
     overflow-x: hidden;
 }
+
+.features-nav{
+    max-width: 100%;
+}
+
+.showcase-wrapper{
+    min-height: calc(100vh - 300px) !important;
+    
+}

@@ -5,3 +5,58 @@ nav {
     padding-right: 50px;
     padding-top: 20px;
 }
+
+
+.nav-logo-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Logo Image Styling */
+.nav-logo-image {
+    height: 60px; 
+    width: auto;
+    filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.3)); /* Subtle cyan glow */
+}
+
+
+.nav-logo-group span {
+    font-size: 2.5rem; 
+    font-weight: 800;  
+    letter-spacing: -1px;
+    line-height: 1.2;
+    margin-left: 10px;
+   
+    /* Blueprint Gradient effect */
+    background: linear-gradient(180deg, #ffffff 30%, #00e5ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    
+    /* Ensures it looks sharp on dark mode */
+    text-transform: uppercase;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+
+/* Ensure the Link doesn't have default blue/purple colors or underlines */
+.logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none !important; /* Force remove underline */
+    color: inherit; /* Keep the text color as defined in your span */
+    border: none;
+    padding: 0;
+}
+
+.logo-link:hover {
+    text-decoration: none;
+    background: transparent;
+}
+
+/* Add a nice hover effect to the logo image */
+.logo-link:hover .nav-logo-image {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.7));
+    transition: all 0.3s ease;
+}

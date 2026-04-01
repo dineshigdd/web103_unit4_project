@@ -1,21 +1,33 @@
-import React from 'react'
-import '../App.css'
-import '../css/Navigation.css'
+import React from 'react';
+import { Link } from 'react-router-dom'; // Add this import
+import bespokeLogo from '../assets/bespoke_logo.png';
+import '../App.css';
+import '../css/Navigation.css';
 
 const Navigation = () => {
     return (
-        <nav>
+        <nav className="container-fluid">
             <ul>
-                <li><h1>Bolt Bucket 🏎️</h1></li>
+                <li className="nav-logo-group">
+                    {/* Use Link instead of <a> to prevent page refresh */}
+                    <Link to="/" className="logo-link">
+                        <img 
+                            src={bespokeLogo} 
+                            alt="Bespoke Auto Logo" 
+                            className="nav-logo-image"
+                        />
+                        <span>Bespoke Auto</span>
+                    </Link>
+                </li>
             </ul>
 
             <ul>
-                <li><a href='/' role='button'>Customize</a></li>
-                <li><a href='/customcars' role='button'>View Cars</a></li>
+                {/* Update these to Links as well for a seamless SPA experience */}
+                <li><Link to='/' role='button' className="outline">Customize</Link></li>
+                <li><Link to='/customcars' role='button'>View Cars</Link></li>
             </ul>
-            
         </nav>
-    )
+    );
 }
 
-export default Navigation
+export default Navigation;
