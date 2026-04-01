@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import carAPI from '../services/carAPI';
-import '../css/CarDetails.css';
+import '../css/CarDetails.css';//If error occured in Linux, change to carDetails.css
 import { COLOR_MAP, BASE_CAR_PRICE } from '../utils/constants';
 import Notification from '../components/Notification';
 
