@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import carAPI from '../services/carAPI';
 import { useNavigate } from 'react-router-dom';
 import '../App.css';
-import '../css/ViewCars.css';
+import '../css/ViewCar.css';
 
 const ViewCars = () => {
     const [savedCars, setSavedCars] = useState([]);
